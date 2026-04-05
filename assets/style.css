@@ -1,0 +1,82 @@
+/* assets/style.css — PolariViz global styles */
+
+/* ── Reset & base ─────────────────────────────────────────────────────────── */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #1A1A2E;
+    color: #E0E0E0;
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', sans-serif;
+    font-size: 13px;
+    overflow-x: hidden;
+}
+
+/* ── Scrollbar styling (webkit) ───────────────────────────────────────────── */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #1A1A2E;
+}
+::-webkit-scrollbar-thumb {
+    background: #2A2A4A;
+    border-radius: 3px;
+}
+
+/* ── Dash slider overrides ────────────────────────────────────────────────── */
+.rc-slider-track {
+    background-color: #457B9D !important;
+}
+.rc-slider-handle {
+    border-color: #7EC8E3 !important;
+    background-color: #7EC8E3 !important;
+    width: 14px !important;
+    height: 14px !important;
+    margin-top: -5px !important;
+}
+.rc-slider-rail {
+    background-color: #2A2A4A !important;
+}
+.rc-slider-handle:hover,
+.rc-slider-handle:active {
+    border-color: #E9C46A !important;
+    background-color: #E9C46A !important;
+    box-shadow: 0 0 6px rgba(233,196,106,0.5) !important;
+}
+
+/* ── Dash tab overrides ───────────────────────────────────────────────────── */
+.dash-tab {
+    background-color: #1A1A2E;
+    color: #B0B0C0;
+}
+.dash-tab--selected {
+    background-color: #16213E;
+    color: #E0E0E0;
+}
+
+/* ── Radio items & checklists ─────────────────────────────────────────────── */
+.dash-radioitems label,
+.dash-checklist label {
+    cursor: pointer;
+    user-select: none;
+}
+.dash-radioitems input,
+.dash-checklist input {
+    accent-color: #7EC8E3;
+    cursor: pointer;
+}
+
+/* ── Plotly modebar ───────────────────────────────────────────────────────── */
+.modebar {
+    background-color: transparent !important;
+}
+.modebar-btn path {
+    fill: #7EC8E3 !important;
+}
+.modebar-btn:hover path {
+    fill: #E9C46A !important;
+}
