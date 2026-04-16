@@ -347,7 +347,8 @@ def make_3d_figure(result, show_ellipse=True, show_eaxes=True):
             ),
             aspectmode='cube',
             camera=dict(
-                eye=dict(x=1.4, y=1.0, z=0.8),
+                eye=dict(x=0.75, y=0.75, z=0.75),
+                # eye=dict(x=1.4, y=1.0, z=0.8),
                 up=dict(x=0, y=0, z=1),
             ),
         ),

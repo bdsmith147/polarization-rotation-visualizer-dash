@@ -248,7 +248,7 @@ scene_panel = html.Div([
     dcc.Graph(
         id='plot-3d',
         style={'height': '60vh'},
-        config={'displayModeBar': True, 'scrollZoom': True},
+        config={'displayModeBar': True, 'scrollZoom': False, 'modeBarButtonsToRemove': ['zoom3d', 'pan3d']},
     ),
 ], style={**STYLE_PANEL, 'width': '60%', 'boxSizing': 'border-box',
           'padding': '6px'})
