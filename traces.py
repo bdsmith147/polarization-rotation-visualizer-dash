@@ -257,7 +257,7 @@ def make_3d_figure(result, show_ellipse=True, show_eaxes=True):
 
     # ── Derived geometry ──────────────────────────────────────────────────────
     k_tail = scale(k_hat, -L_ARROW)          # tail: -L × k̂
-    k_tip  = scale(k_hat,  R_SPHERE)         # tip: sphere surface
+    k_tip  = scale(k_hat, -R_SPHERE)         # tip: sphere surface
 
     q_tip  = scale(q_axis, L_ARROW)          # quantization axis tip
 
