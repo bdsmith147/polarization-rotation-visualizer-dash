@@ -348,7 +348,6 @@ def make_3d_figure(result, show_ellipse=True, show_eaxes=True):
             aspectmode='cube',
             camera=dict(
                 eye=dict(x=0.75, y=0.75, z=0.75),
-                # eye=dict(x=1.4, y=1.0, z=0.8),
                 up=dict(x=0, y=0, z=1),
             ),
         ),
@@ -643,25 +642,25 @@ def make_density_figure(result):
 
     # ── Axis tick annotations ─────────────────────────────────────────────────
     # Add invisible scatter traces at tick positions to get axis labels
-    for idx, lbl in enumerate(labels):
-        # x-axis label (bottom)
-        traces.append(go.Scatter3d(
-            x=[idx * DM_BAR_GAP], y=[-0.7], z=[0],
-            mode='text',
-            text=[lbl],
-            textfont=dict(color=COLOR_TEXT, size=12),
-            showlegend=False,
-            hoverinfo='none',
-        ))
-        # y-axis label (left)
-        traces.append(go.Scatter3d(
-            x=[-0.7], y=[idx * DM_BAR_GAP], z=[0],
-            mode='text',
-            text=[lbl],
-            textfont=dict(color=COLOR_TEXT, size=12),
-            showlegend=False,
-            hoverinfo='none',
-        ))
+    # for idx, lbl in enumerate(labels):
+    #     # x-axis label (bottom)
+    #     traces.append(go.Scatter3d(
+    #         x=[idx * DM_BAR_GAP], y=[-0.7], z=[0],
+    #         mode='text',
+    #         text=[''],
+    #         textfont=dict(color=COLOR_TEXT, size=12),
+    #         showlegend=False,
+    #         hoverinfo='none',
+    #     ))
+    #     # y-axis label (left)
+    #     traces.append(go.Scatter3d(
+    #         x=[-0.7], y=[idx * DM_BAR_GAP], z=[0],
+    #         mode='text',
+    #         text=[''],
+    #         textfont=dict(color=COLOR_TEXT, size=12),
+    #         showlegend=False,
+    #         hoverinfo='none',
+    #     ))
 
     layout = go.Layout(
         paper_bgcolor=COLOR_PAPER,
