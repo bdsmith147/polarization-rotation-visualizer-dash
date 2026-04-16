@@ -83,10 +83,14 @@ def _arrow_traces(tail, tip, color, name, line_width=5, cone_size=0.07):
         return []
 
     # Shaft: line from tail to tip
+    scale = 0.8
     shaft = go.Scatter3d(
-        x=[tail[0], tip[0]],
-        y=[tail[1], tip[1]],
-        z=[tail[2], tip[2]],
+        # x=[tail[0], tip[0]],
+        # y=[tail[1], tip[1]],
+        # z=[tail[2], tip[2]],
+        x=[tail[0], scale * tip[0] + (1 - scale) * tail[0]],
+        y=[tail[1], scale * tip[1] + (1 - scale) * tail[1]],
+        z=[tail[2], scale * tip[2] + (1 - scale) * tail[2]],
         mode='lines',
         line=dict(color=color, width=line_width),
         name=name,
@@ -258,9 +262,9 @@ def make_3d_figure(result, show_ellipse=True, show_eaxes=True):
 
     # ── Derived geometry ──────────────────────────────────────────────────────
     k_tail = scale(k_hat, -L_ARROW)          # tail: -L × k̂
-    k_tip  = scale(k_hat, -R_SPHERE)         # tip: sphere surface
+    k_tip  = scale(k_hat, -R_SPHERE * 1.2)         # tip: sphere surface
 
-    q_tip  = scale(q_axis, L_ARROW)          # quantization axis tip
+    q_tip  = scale(q_axis, L_ARROW / 2)          # quantization axis tip
 
     e1_tail = k_tail
     e1_tip  = add(k_tail, scale(e1, L_EAXES))
@@ -281,13 +285,13 @@ def make_3d_figure(result, show_ellipse=True, show_eaxes=True):
     traces += _arrow_traces(
         [0, 0, 0], q_tip,
         color=COLOR_QUANT, name='Quantization axis',
-        line_width=5, cone_size=0.07)
+        line_width=10, cone_size=0.15)
 
     # 4. k̂ vector (most prominent arrow)
     traces += _arrow_traces(
         k_tail, k_tip,
         color=COLOR_K_ARROW, name='k̂ (beam)',
-        line_width=6, cone_size=0.08)
+        line_width=20, cone_size=0.30)
 
     # 5. ê₁, ê₂ axes (subtle, checkbox-gated)
     if show_eaxes:
@@ -475,8 +479,8 @@ def make_level_figure(result):
 
         # Arrow shaft (vertical line)
         traces.append(go.Scatter(
-            x=[0.5, x_center],
-            y=[LEVEL_J0_Y, LEVEL_J1_Y - 0.08],
+            x=[0.5 - (0.5 - x_center) * 0.1, x_center],
+            y=[LEVEL_J0_Y + 0.04, LEVEL_J1_Y - 0.08],
             mode='lines',
             line=dict(color=color, width=width),
             name=labels[key],
