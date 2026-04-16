@@ -54,9 +54,9 @@ COLOR_LAB_AXES_TEXT = '#000000'   # black    — axis labels
 LEVEL_J0_Y     = 0.15   # y position of J=0 ground level line
 LEVEL_J1_Y     = 0.80   # y position of J=1 excited level line
 LEVEL_MJ_XS    = {      # x positions of mJ sublevels
-    'plus1':  0.25,
+    'plus1':  0.75,
     'zero':   0.50,
-    'minus1': 0.75,
+    'minus1': 0.25,
 }
 LEVEL_LINE_HALF_W = 0.10  # half-width of each level line segment
 
@@ -411,9 +411,9 @@ def make_level_figure(result):
     }
     
     angles = {
-        'plus1':  -35,
+        'plus1':  35,
         'zero':   0,
-        'minus1': 35,
+        'minus1': -35,
         }
 
     traces = []
