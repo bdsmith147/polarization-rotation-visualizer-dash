@@ -404,12 +404,18 @@ def make_level_figure(result):
         'zero':   'mJ=0   (π)',
         'minus1': 'mJ=-1  (σ-)',
     }
+    
+    angles = {
+        'plus1':  -35,
+        'zero':   0,
+        'minus1': 35,
+        }
 
     traces = []
 
     # ── J=0 ground level line ─────────────────────────────────────────────────
     traces.append(go.Scatter(
-        x=[0.1, 0.9], y=[LEVEL_J0_Y, LEVEL_J0_Y],
+        x=[0.5 - LEVEL_LINE_HALF_W, 0.5 + LEVEL_LINE_HALF_W], y=[LEVEL_J0_Y, LEVEL_J0_Y],
         mode='lines',
         line=dict(color=COLOR_TEXT, width=2),
         name='J=0',
@@ -464,11 +470,12 @@ def make_level_figure(result):
         color = colors[key]
         width = widths[key]
         pct_val = pct[key]
+        ang = angles[key]
 
         # Arrow shaft (vertical line)
         traces.append(go.Scatter(
-            x=[x_center, x_center],
-            y=[LEVEL_J0_Y, LEVEL_J1_Y],
+            x=[0.5, x_center],
+            y=[LEVEL_J0_Y, LEVEL_J1_Y - 0.08],
             mode='lines',
             line=dict(color=color, width=width),
             name=labels[key],
@@ -479,12 +486,13 @@ def make_level_figure(result):
         # Arrowhead (triangle marker at tip)
         traces.append(go.Scatter(
             x=[x_center],
-            y=[LEVEL_J1_Y],
+            y=[LEVEL_J1_Y - 0.08],
             mode='markers',
             marker=dict(
                 symbol='triangle-up',
                 size=max(6, width * 1.5),
                 color=color,
+                angle=ang,
             ),
             showlegend=False,
             hoverinfo='none',

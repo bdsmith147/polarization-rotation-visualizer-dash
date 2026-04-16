@@ -736,7 +736,7 @@ def compute_all(
     # Tab 2 params (used if input_mode == 'waveplate')
     alpha1_rad=0.0, alpha2_rad=0.0, alpha3_rad=0.0,
     # Ellipse resolution
-    n_ellipse_points=100,
+    n_ellipse_points=50,
 ):
     """Single master function called by the Dash callback.
 
@@ -786,14 +786,18 @@ def compute_all(
     if input_mode == 'basis':
         if basis_state is None:
             raise ValueError("basis_state must be provided when input_mode='basis'")
-        E_lab   = jones_from_basis_state(basis_state)
+        E_lab = jones_from_basis_state(basis_state)
         jones_2d = None
         # For Stokes/ellipse: project E_lab back to 2D beam frame
         # (approximate — basis states are defined in spherical basis, not beam frame)
         # Use the real parts of projections for visualization purposes
         Ex = c_dot(real_vec_to_c(e1), E_lab)
         Ey = c_dot(real_vec_to_c(e2), E_lab)
+        print(E_lab)
         jones_2d_for_ellipse = [Ex, Ey]
+        
+        # FIXME: Doesn't work for pi-pol because field is in z-component in the lab frame
+        # jones_2d_for_ellipse = E_beam_frame  
 
     elif input_mode == 'waveplate':
         jones_2d = apply_waveplate_chain(alpha1_rad, alpha2_rad, alpha3_rad)
@@ -864,17 +868,17 @@ if __name__ == "__main__":
     # k̂ along +z when θ=0
     k = make_k_hat(0, 0)
     assert abs(k[2] - 1.0) < 1e-10, f"k_hat(0,0) should be z-hat: {k}"
-
+    
     # k̂ along +x when θ=90°, φ=0
     k = make_k_hat(degrees_to_radians(90), 0)
     assert abs(k[0] - 1.0) < 1e-10, f"k_hat(90,0) should be x-hat: {k}"
-
+    
     # Beam frame at θ=0 should give e1=x̂, e2=ŷ, k̂=ẑ (at χ=0)
     e1, e2, k_hat = make_beam_frame(0, 0, 0)
     assert abs(e1[0] - 1.0) < 1e-10, f"e1 at theta=0 should be x-hat: {e1}"
     assert abs(e2[1] - 1.0) < 1e-10, f"e2 at theta=0 should be y-hat: {e2}"
     assert abs(k_hat[2] - 1.0) < 1e-10, f"k_hat at theta=0 should be z-hat: {k_hat}"
-
+    
     # Frame should be orthonormal
     assert abs(dot(e1, e2))    < 1e-10, "e1 · e2 ≠ 0"
     assert abs(dot(e1, k_hat)) < 1e-10, "e1 · k̂ ≠ 0"
@@ -882,10 +886,11 @@ if __name__ == "__main__":
     assert abs(norm(e1) - 1.0) < 1e-10, "e1 not unit"
     assert abs(norm(e2) - 1.0) < 1e-10, "e2 not unit"
 
+
     # Rodrigues: rotating x̂ by 90° around ẑ should give ŷ
     result = rodrigues([1,0,0], [0,0,1], degrees_to_radians(90))
     assert abs(result[1] - 1.0) < 1e-10, f"Rodrigues failed: {result}"
-
+    
     # ── Waveplate matrices ────────────────────────────────────────────────────
     # QWP at 45°: converts vertical linear → circular (equal amplitudes Ex, Ey)
     qwp45 = jones_matrix_qwp(degrees_to_radians(45))
@@ -893,7 +898,6 @@ if __name__ == "__main__":
     E_circ = jones_mat2_vec2_multiply(qwp45, E_vert)
     assert abs(c_abs(E_circ[0]) - c_abs(E_circ[1])) < 1e-10, \
         f"QWP(45°) on vertical should give circular: {E_circ}"
-
     # HWP at 45°: should rotate vertical → horizontal
     hwp45 = jones_matrix_hwp(degrees_to_radians(45))
     E_horiz = jones_mat2_vec2_multiply(hwp45, E_vert)
@@ -970,7 +974,7 @@ if __name__ == "__main__":
         "rho should be 3x3"
 
     # Ellipse should have correct number of points
-    assert len(result['ellipse_xs']) == 100, \
+    assert len(result['ellipse_xs']) == 50, \
         f"Ellipse should have 100 points: {len(result['ellipse_xs'])}"
 
     # Poincaré point should be on or inside unit sphere
