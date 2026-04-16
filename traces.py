@@ -41,13 +41,13 @@ COLOR_QUANT       = '#457B9D'   # blue     — quantization axis
 COLOR_EAXES       = '#2A9D8F'   # teal     — ê₁ and ê₂ (same color for both)
 COLOR_ELLIPSE     = '#E9C46A'   # gold     — polarization ellipse in 3D
 COLOR_SPHERE      = '#A8DADC'   # pale blue — atom cloud
-COLOR_LAB_AXES    = '#999999'   # grey     — x, y, z reference lines
+COLOR_LAB_AXES    = '#000000'   # grey     — x, y, z reference lines
 COLOR_SIGMA_PLUS  = '#E63946'   # red      — σ+ transitions
 COLOR_PI          = '#2A9D8F'   # teal     — π  transitions
 COLOR_SIGMA_MINUS = '#457B9D'   # blue     — σ- transitions
 COLOR_BG          = '#1A1A2E'   # dark navy — figure background
 COLOR_PAPER       = '#16213E'   # slightly lighter — paper background
-COLOR_TEXT        = '#E0E0E0'   # light grey — axis labels and annotations
+COLOR_TEXT        = '#000000'   # light grey — axis labels and annotations
 
 # ── Level diagram layout (in normalized figure units 0–1) ─────────────────────
 LEVEL_J0_Y     = 0.15   # y position of J=0 ground level line
