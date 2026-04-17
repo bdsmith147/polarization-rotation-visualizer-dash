@@ -803,17 +803,25 @@ def compute_all(
 
     # ── Step 2: Polarization state ────────────────────────────────────────────
     if input_mode == 'basis':
-        if basis_state is None:
+        if basis_state == "pi":
+            E_input = jones_from_basis_state(basis_state)
+            R_prepare = rotation_y(degrees_to_radians(-90))
+            E_input = c_mat_vec_multiply(real_mat_to_c(R_prepare), E_input)
+        elif basis_state == "sigma_plus" or basis_state == "sigma_minus":
+            E_input = jones_from_basis_state(basis_state)  # FIXME - change E_lab to E_beam_frame
+        elif basis_state is None:
             raise ValueError("basis_state must be provided when input_mode='basis'")
-        E_lab = jones_from_basis_state(basis_state)  # FIXME - change E_lab to E_beam_frame
+        else:
+            raise ValueError("Invalid value for basis_state")
         jones_2d = None
         # For Stokes/ellipse: project E_lab back to 2D beam frame
         # (approximate — basis states are defined in spherical basis, not beam frame)
         # Use the real parts of projections for visualization purposes
-        Ex = c_dot(real_vec_to_c(e1), E_lab)
-        Ey = c_dot(real_vec_to_c(e2), E_lab)
-        # print(E_lab)
+        Ex = c_dot(real_vec_to_c(e1), E_input)
+        Ey = c_dot(real_vec_to_c(e2), E_input)
+        print(E_input)
         jones_2d_for_ellipse = [Ex, Ey]
+        E_lab = E_input  # FIXME, both here and below where E_lab appears
         
         # FIXME: Doesn't work for pi-pol because field is in z-component in the lab frame
         # jones_2d_for_ellipse = E_beam_frame  
