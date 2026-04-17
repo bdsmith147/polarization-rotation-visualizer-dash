@@ -48,7 +48,7 @@ app = Dash(__name__, title='PolariViz')
 
 SLIDERS = {
     # Beam direction (ZYZ Euler angles)
-    'theta':  dict(min=0,   max=180, step=1, value=45,  label='θ (polar)'),
+    'theta':  dict(min=0,   max=180, step=1, value=0,  label='θ (polar)'),
     'phi':    dict(min=0,   max=360, step=1, value=0,   label='φ (azimuthal)'),
     'chi':    dict(min=0,   max=360, step=1, value=0,   label='χ (roll)'),
     # Quantization axis

@@ -321,7 +321,7 @@ def make_3d_figure(result, show_ellipse=True, show_eaxes=True):
             x=0.5,
         ),
         legend=dict(
-            font=dict(color=COLOR_TEXT, size=11),
+            font=dict(color=COLOR_LAB_AXES_TEXT, size=11),
             bgcolor='rgba(0,0,0,0)',
             x=0.01, y=0.99,
         ),

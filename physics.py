@@ -397,7 +397,7 @@ def embed_jones_in_lab(jones_2d, e1, e2):
 
 # ── SECTION 3: SPHERICAL DECOMPOSITION ───────────────────────────────────────
 
-def rotate_efield_to_quant_frame(E_lab, theta_B_rad, phi_B_rad):
+def rotate_efield_to_quant_frame(E_lab, theta_B_rad, phi_B_rad):  # FIXME - Change E_lab to E_beam_frame
     """Rotate lab-frame E-field into the quantization axis frame.
 
     The quantization axis frame has ẑ_q along the B-field direction,
@@ -414,11 +414,30 @@ def rotate_efield_to_quant_frame(E_lab, theta_B_rad, phi_B_rad):
             const R_inv = invert_rotation(R);
             return cMatVecMultiply(realMatToC(R_inv), E_lab);
         }
-    """
+    """  # TODO: Check if the Rz has the theta or the phi argument
     R     = mat_mat_multiply(rotation_z(phi_B_rad), rotation_y(theta_B_rad))
     R_inv = invert_rotation(R)
     return c_mat_vec_multiply(real_mat_to_c(R_inv), E_lab)
 
+
+def rotate_efield_to_beam_frame(E_input, theta_rad, phi_rad, chi_rad):
+    """Rotate the input E-field into the beam frame.
+    
+    The input E-field is assumed to lie along the z-axis. To go from input
+    E-field to that in the beam frame, we apply a rotation matrix 
+    R = Rz()
+    
+    JS: function rotateEfieldToQuantFrame(E_lab, thetaB, phiB) {
+            const R     = matMatMultiply(rotationZ(phiB), rotationY(thetaB));
+            const R_inv = invert_rotation(R);
+            return cMatVecMultiply(realMatToC(R_inv), E_lab);
+        }
+    """
+    Rz1 = rotation_z(theta_rad)
+    Ry = rotation_y(phi_rad)
+    R_z2 = rotation_z(chi_rad)
+    R = mat_mat_multiply(Rz1, mat_mat_multiply(Ry, R_z2))
+    return c_mat_vec_multiply(real_mat_to_c(R), E_input)
 
 def decompose_to_spherical(E_quant):
     """Decompose E_quant into spherical (σ+, π, σ−) components.
@@ -786,14 +805,14 @@ def compute_all(
     if input_mode == 'basis':
         if basis_state is None:
             raise ValueError("basis_state must be provided when input_mode='basis'")
-        E_lab = jones_from_basis_state(basis_state)
+        E_lab = jones_from_basis_state(basis_state)  # FIXME - change E_lab to E_beam_frame
         jones_2d = None
         # For Stokes/ellipse: project E_lab back to 2D beam frame
         # (approximate — basis states are defined in spherical basis, not beam frame)
         # Use the real parts of projections for visualization purposes
         Ex = c_dot(real_vec_to_c(e1), E_lab)
         Ey = c_dot(real_vec_to_c(e2), E_lab)
-        print(E_lab)
+        # print(E_lab)
         jones_2d_for_ellipse = [Ex, Ey]
         
         # FIXME: Doesn't work for pi-pol because field is in z-component in the lab frame
