@@ -20,7 +20,7 @@
 #   5. Run
 # ─────────────────────────────────────────────────────────────────────────────
 
-from dash import Dash, dcc, html, Input, Output, callback
+from dash import Dash, dcc, html, Input, Output, State, callback
 import plotly.graph_objects as go
 from math_helpers import degrees_to_radians
 from physics import compute_all
@@ -363,6 +363,8 @@ app.layout = html.Div([
     Input('slider-alpha3',  'value'),
     # Visibility
     Input('visibility-checks', 'value'),
+    # Current 3D figure state (for preserving camera)
+    State('plot-3d', 'figure'),
 )
 def update_all(
     theta, phi, chi,
@@ -370,6 +372,7 @@ def update_all(
     pol_mode, basis_state,
     alpha1, alpha2, alpha3,
     visibility,
+    current_3d,
 ):
     # ── Visibility flags ──────────────────────────────────────────────────────
     show_ellipse = 'ellipse' in (visibility or [])
@@ -393,6 +396,8 @@ def update_all(
     # ── Build figures ─────────────────────────────────────────────────────────
     # JS conversion: each make_*_figure() call becomes its JS equivalent
     fig_3d       = make_3d_figure(result, show_ellipse, show_eaxes)
+    if current_3d and current_3d.get('layout', {}).get('scene', {}).get('camera'):
+        fig_3d.update_layout(scene_camera=current_3d['layout']['scene']['camera'])
     fig_level    = make_level_figure(result)
     fig_density  = make_density_figure(result)
     fig_ellipse  = make_ellipse_figure(result)
