@@ -384,6 +384,7 @@ app.layout = html.Div([
     Input('visibility-checks', 'value'),
     # Current 3D figure state (for preserving camera)
     State('plot-3d', 'figure'),
+    State('plot-3d', 'relayoutData'),
     prevent_initial_call='initial_duplicate',
 )
 def update_all(
@@ -393,6 +394,7 @@ def update_all(
     alpha1, alpha2, alpha3,
     visibility,
     current_3d,
+    relayout_data,
 ):
     # ── Visibility flags ──────────────────────────────────────────────────────
     show_ellipse = 'ellipse' in (visibility or [])
@@ -416,8 +418,13 @@ def update_all(
     # ── Build figures ─────────────────────────────────────────────────────────
     # JS conversion: each make_*_figure() call becomes its JS equivalent
     fig_3d       = make_3d_figure(result, show_ellipse, show_eaxes)
-    if current_3d and current_3d.get('layout', {}).get('scene', {}).get('camera'):
-        fig_3d.update_layout(scene_camera=current_3d['layout']['scene']['camera'])
+    camera = None
+    if relayout_data and 'scene.camera' in relayout_data:
+        camera = relayout_data['scene.camera']
+    elif current_3d and current_3d.get('layout', {}).get('scene', {}).get('camera'):
+        camera = current_3d['layout']['scene']['camera']
+    if camera:
+        fig_3d.update_layout(scene_camera=camera)
     fig_level    = make_level_figure(result)
     fig_density  = make_density_figure(result)
     fig_ellipse  = make_ellipse_figure(result)
