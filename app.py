@@ -20,7 +20,7 @@
 #   5. Run
 # ─────────────────────────────────────────────────────────────────────────────
 
-from dash import Dash, dcc, html, Input, Output, State, callback
+from dash import Dash, dcc, html, Input, Output, State, callback, no_update
 import plotly.graph_objects as go
 from math_helpers import degrees_to_radians
 from physics import compute_all
@@ -62,11 +62,11 @@ SLIDERS = {
 
 
 def _slider_block(slider_id, spec):
-    """Return a labelled slider as a Div — label + dcc.Slider + value display.
+    """Return a labelled slider as a Div — label + number input + dcc.Slider.
 
     JS conversion:
         <div class="slider-block">
-            <label>{spec['label']}: <span id="{slider_id}-val">0</span>°</label>
+            <label>{spec['label']}: <input type="number" id="{slider_id}-input">°</label>
             <input type="range" id="{slider_id}" min=... max=... step=... value=...>
         </div>
     """
@@ -74,11 +74,30 @@ def _slider_block(slider_id, spec):
         html.Div([
             html.Span(spec['label'] + ': ',
                       style={'color': '#B0B0C0', 'fontSize': '12px'}),
-            html.Span(id=f'{slider_id}-val',
-                      style={'color': '#E0E0E0', 'fontSize': '12px',
-                             'fontWeight': 'bold'}),
-            html.Span('°', style={'color': '#B0B0C0', 'fontSize': '12px'}),
-        ], style={'marginBottom': '2px'}),
+            dcc.Input(
+                id=f'input-{slider_id}',
+                type='number',
+                value=spec['value'],
+                min=spec['min'],
+                max=spec['max'],
+                step=spec['step'],
+                debounce=True,
+                style={
+                    'width': '52px',
+                    'backgroundColor': '#0D1B2A',
+                    'color': '#E0E0E0',
+                    'border': '1px solid #2A2A4A',
+                    'borderRadius': '4px',
+                    'fontSize': '12px',
+                    'fontWeight': 'bold',
+                    'textAlign': 'center',
+                    'padding': '1px 4px',
+                },
+            ),
+            html.Span('°', style={'color': '#B0B0C0', 'fontSize': '12px',
+                                  'marginLeft': '2px'}),
+        ], style={'marginBottom': '2px', 'display': 'flex',
+                  'alignItems': 'center', 'gap': '4px'}),
         dcc.Slider(
             id=f'slider-{slider_id}',
             min=spec['min'],
@@ -338,15 +357,15 @@ app.layout = html.Div([
     Output('plot-density', 'figure'),
     Output('plot-ellipse', 'figure'),
     Output('plot-poincare','figure'),
-    # ── Slider value displays ─────────────────────────────────────────────────
-    Output('theta-val',   'children'),
-    Output('phi-val',     'children'),
-    Output('chi-val',     'children'),
-    Output('theta_b-val', 'children'),
-    Output('phi_b-val',   'children'),
-    Output('alpha1-val',  'children'),
-    Output('alpha2-val',  'children'),
-    Output('alpha3-val',  'children'),
+    # ── Slider value displays (keep input boxes in sync with slider) ──────────
+    Output('input-theta',   'value', allow_duplicate=True),
+    Output('input-phi',     'value', allow_duplicate=True),
+    Output('input-chi',     'value', allow_duplicate=True),
+    Output('input-theta_b', 'value', allow_duplicate=True),
+    Output('input-phi_b',   'value', allow_duplicate=True),
+    Output('input-alpha1',  'value', allow_duplicate=True),
+    Output('input-alpha2',  'value', allow_duplicate=True),
+    Output('input-alpha3',  'value', allow_duplicate=True),
     # ── Inputs: beam sliders ──────────────────────────────────────────────────
     Input('slider-theta',   'value'),
     Input('slider-phi',     'value'),
@@ -365,6 +384,7 @@ app.layout = html.Div([
     Input('visibility-checks', 'value'),
     # Current 3D figure state (for preserving camera)
     State('plot-3d', 'figure'),
+    prevent_initial_call='initial_duplicate',
 )
 def update_all(
     theta, phi, chi,
@@ -405,15 +425,35 @@ def update_all(
 
     return (
         fig_3d, fig_level, fig_density, fig_ellipse, fig_poincare,
-        # Slider value displays
-        str(theta), str(phi), str(chi),
-        str(theta_b), str(phi_b),
-        str(alpha1), str(alpha2), str(alpha3),
+        theta, phi, chi,
+        theta_b, phi_b,
+        alpha1, alpha2, alpha3,
     )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 5. RUN
+# 5. SLIDER ↔ NUMBER INPUT SYNC CALLBACKS
+# ══════════════════════════════════════════════════════════════════════════════
+# One pair per slider: slider → input (display sync) and input → slider (entry).
+# Clamping is applied in the input→slider direction so the slider and displayed
+# value always agree and stay within the valid physics range.
+# JS conversion: not needed — <input type="range"> and <input type="number">
+# can be kept in sync with a single oninput handler per parameter.
+
+for _sid, _spec in SLIDERS.items():
+    @callback(
+        Output(f'slider-{_sid}', 'value'),
+        Input(f'input-{_sid}', 'value'),
+        prevent_initial_call=True,
+    )
+    def _sync_slider_from_input(val, _lo=_spec['min'], _hi=_spec['max']):
+        if val is None:
+            return no_update
+        return max(_lo, min(_hi, val))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 6. RUN
 # ══════════════════════════════════════════════════════════════════════════════
 
 if __name__ == '__main__':
