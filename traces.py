@@ -569,10 +569,11 @@ def _bar_mesh(x_center, y_center, height, color):
     vy = [y0, y0, y1, y1, y0, y0, y1, y1]
     vz = [z0, z0, z0, z0, z1, z1, z1, z1]
 
-    # 12 triangles (2 per face × 6 faces)
-    i = [0, 0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4]
-    j = [1, 3, 2, 5, 3, 6, 0, 7, 4, 5, 5, 7]
-    k = [2, 2, 5, 6, 6, 7, 7, 4, 5, 1, 6, 6]  # renamed to avoid clash
+    # 12 triangles (2 per face × 6 faces), all wound CCW from outside
+    # bottom(-z)  top(+z)    front(-y)  back(+y)   right(+x)  left(-x)
+    i = [0, 0,   4, 4,   0, 0,   2, 2,   1, 1,   0, 0]
+    j = [3, 2,   5, 6,   1, 5,   3, 7,   2, 6,   4, 7]
+    k = [2, 1,   6, 7,   5, 4,   7, 6,   6, 5,   7, 3]
 
     return go.Mesh3d(
         x=vx, y=vy, z=vz,
@@ -580,7 +581,7 @@ def _bar_mesh(x_center, y_center, height, color):
         color=color,
         opacity=1.0,
         flatshading=True,
-        showlegend=False,
+showlegend=False,
         hoverinfo='skip',
     )
 
