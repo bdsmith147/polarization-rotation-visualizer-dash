@@ -169,7 +169,7 @@ def make_beam_frame(theta_rad, phi_rad, chi_rad):
     e1_0 = cross(z_hat, k_hat)
     if norm(e1_0) < 1e-6:
         # Singular point: beam along ±ẑ, fallback to x̂
-        e1_0 = [0, 1, 0]
+        e1_0 = [0, 1, 0]  # This makes it consistent with the ZYZ rotation scheme
     else:
         e1_0 = normalize(e1_0)
 
@@ -807,10 +807,11 @@ def compute_all(
     if input_mode == 'basis':
         if basis_state == "pi":
             E_input = jones_from_basis_state(basis_state)
-            R_1 = real_mat_to_c(rotation_y(degrees_to_radians(-90)))
-            R_2 = real_mat_to_c(rotation_z(degrees_to_radians(0)))
-            R_prepare = c_mat_mat_multiply(R_2, R_1)
-            E_input = c_mat_vec_multiply(R_prepare, E_input)
+            print("Pre-Input: ", E_input)
+            R_1 = real_mat_to_c(rotation_y(degrees_to_radians(90)))
+            # R_2 = real_mat_to_c(rotation_z(degrees_to_radians(0)))
+            # R_prepare = c_mat_mat_multiply(R_2, R_1)
+            E_input = c_mat_vec_multiply(R_1, E_input)
         elif basis_state == "sigma_plus" or basis_state == "sigma_minus":
             E_input = jones_from_basis_state(basis_state)  # FIXME - change E_lab to E_beam_frame
         elif basis_state is None:
@@ -838,21 +839,24 @@ def compute_all(
     else:
         raise ValueError(f"input_mode must be 'basis' or 'waveplate'. Got: {input_mode}")
     print("Input: ", E_input)
-    # ── Step 3: Stokes parameters and polarization ellipse ───────────────────
-    stokes               = compute_stokes(jones_2d_for_ellipse)
-    e1_vals, e2_vals     = compute_polarization_ellipse(
-                               jones_2d_for_ellipse, n_ellipse_points)
-    ellipse_xs, ellipse_ys, ellipse_zs = embed_ellipse_in_lab(
-                               e1_vals, e2_vals, e1, e2)
-
-    # ── Step 4: Spherical decomposition ──────────────────────────────────────
+    
+    # ── Step 3: Spherical decomposition ──────────────────────────────────────
     E_lab      = rotate_efield_to_lab_frame(E_input, theta_rad, phi_rad, chi_rad)
+    jones_2d_for_ellipse = [c_dot(real_vec_to_c(e1), E_lab),
+                            c_dot(real_vec_to_c(e2), E_lab)]
     print("Lab: ", E_lab, "\n")
     E_quant    = rotate_efield_to_quant_frame(E_lab, theta_B_rad, phi_B_rad)
     spherical  = decompose_to_spherical(E_quant)
     # print(spherical)
     intensities = compute_spherical_intensities(spherical)
     fractions   = compute_spherical_fractions(spherical)
+
+    # ── Step 4: Stokes parameters and polarization ellipse ───────────────────
+    stokes               = compute_stokes(jones_2d_for_ellipse)
+    e1_vals, e2_vals     = compute_polarization_ellipse(
+                               jones_2d_for_ellipse, n_ellipse_points)
+    ellipse_xs, ellipse_ys, ellipse_zs = embed_ellipse_in_lab(
+                               e1_vals, e2_vals, e1, e2)
 
     # ── Step 5: Absorption ────────────────────────────────────────────────────
     absorption = compute_absorption_j0_j1(spherical)
