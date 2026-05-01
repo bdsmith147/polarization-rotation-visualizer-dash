@@ -169,7 +169,7 @@ def make_beam_frame(theta_rad, phi_rad, chi_rad):
     e1_0 = cross(z_hat, k_hat)
     if norm(e1_0) < 1e-6:
         # Singular point: beam along ±ẑ, fallback to x̂
-        e1_0 = [1, 0, 0]
+        e1_0 = [0, 1, 0]
     else:
         e1_0 = normalize(e1_0)
 
@@ -435,10 +435,10 @@ def rotate_efield_to_lab_frame(E_input, theta_rad, phi_rad, chi_rad):
             return cMatVecMultiply(realMatToC(R), E_input);
         }
     """
-    Rz1 = rotation_z(theta_rad)
-    Ry = rotation_y(phi_rad)
-    R_z2 = rotation_z(chi_rad)
-    R = mat_mat_multiply(Rz1, mat_mat_multiply(Ry, R_z2))
+    Rz1 = rotation_z(phi_rad)
+    Ry = rotation_y(theta_rad)
+    Rz2 = rotation_z(chi_rad)
+    R = mat_mat_multiply(Rz1, mat_mat_multiply(Ry, Rz2))
     return c_mat_vec_multiply(real_mat_to_c(R), E_input)
 
 def decompose_to_spherical(E_quant):
@@ -807,8 +807,10 @@ def compute_all(
     if input_mode == 'basis':
         if basis_state == "pi":
             E_input = jones_from_basis_state(basis_state)
-            R_prepare = rotation_y(degrees_to_radians(-90))
-            E_input = c_mat_vec_multiply(real_mat_to_c(R_prepare), E_input)
+            R_1 = real_mat_to_c(rotation_y(degrees_to_radians(-90)))
+            R_2 = real_mat_to_c(rotation_z(degrees_to_radians(0)))
+            R_prepare = c_mat_mat_multiply(R_2, R_1)
+            E_input = c_mat_vec_multiply(R_prepare, E_input)
         elif basis_state == "sigma_plus" or basis_state == "sigma_minus":
             E_input = jones_from_basis_state(basis_state)  # FIXME - change E_lab to E_beam_frame
         elif basis_state is None:
@@ -830,12 +832,12 @@ def compute_all(
 
     elif input_mode == 'waveplate':
         jones_2d = apply_waveplate_chain(alpha1_rad, alpha2_rad, alpha3_rad)
-        E_input    = embed_jones_in_lab(jones_2d, e1, e2)
+        E_input    = embed_jones_in_lab(jones_2d, [1, 0, 0], [0, 1, 0])
         jones_2d_for_ellipse = jones_2d
 
     else:
         raise ValueError(f"input_mode must be 'basis' or 'waveplate'. Got: {input_mode}")
-
+    print("Input: ", E_input)
     # ── Step 3: Stokes parameters and polarization ellipse ───────────────────
     stokes               = compute_stokes(jones_2d_for_ellipse)
     e1_vals, e2_vals     = compute_polarization_ellipse(
@@ -845,9 +847,10 @@ def compute_all(
 
     # ── Step 4: Spherical decomposition ──────────────────────────────────────
     E_lab      = rotate_efield_to_lab_frame(E_input, theta_rad, phi_rad, chi_rad)
+    print("Lab: ", E_lab, "\n")
     E_quant    = rotate_efield_to_quant_frame(E_lab, theta_B_rad, phi_B_rad)
     spherical  = decompose_to_spherical(E_quant)
-    print(spherical)
+    # print(spherical)
     intensities = compute_spherical_intensities(spherical)
     fractions   = compute_spherical_fractions(spherical)
 
