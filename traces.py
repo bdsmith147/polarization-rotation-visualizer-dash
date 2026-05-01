@@ -578,7 +578,7 @@ def _bar_mesh(x_center, y_center, height, color):
         x=vx, y=vy, z=vz,
         i=i, j=j, k=k,
         color=color,
-        opacity=0.85,
+        opacity=1.0,
         flatshading=True,
         showlegend=False,
         hoverinfo='skip',
@@ -610,7 +610,7 @@ def _phase_to_color(phase_rad):
     return f'#{ri:02x}{gi:02x}{bi:02x}'
 
 
-def make_density_figure(result):
+def make_density_figure(result, camera=None):
     """Build the 3×3 density matrix visualization.
 
     Each element ρᵢⱼ is drawn as a 3D rectangular bar:
@@ -619,26 +619,43 @@ def make_density_figure(result):
 
     Axes labeled [σ+, π, σ-] on both x and y.
 
+    camera: optional dict with 'eye' key containing {'x', 'y', 'z'}.
+            When provided, bars are sorted farthest-to-nearest (painter's
+            algorithm) so semi-transparent bars composite correctly.
+
     Returns a go.Figure.
     """
     rho_amps   = result['rho_amps']
     rho_phases = result['rho_phases']
 
     labels = ['σ+', 'π', 'σ-']
-    traces = []
 
+    # Build list of bar specs with their centers for depth sorting
+    bar_specs = []
     for i in range(3):
         for j in range(3):
-            amp   = rho_amps[i][j]
-            phase = rho_phases[i][j]
-            color = _phase_to_color(phase)
-            # x → column (j), y → row (i)
-            traces.append(_bar_mesh(
-                x_center = j * DM_BAR_GAP,
-                y_center = i * DM_BAR_GAP,
-                height   = amp,
-                color    = color,
-            ))
+            xc = j * DM_BAR_GAP
+            yc = i * DM_BAR_GAP
+            bar_specs.append((xc, yc, rho_amps[i][j], rho_phases[i][j]))
+
+    # Sort farthest-to-nearest so painter's algorithm composites correctly
+    if camera and 'eye' in camera:
+        eye = camera['eye']
+        ex, ey, ez = eye.get('x', 1.25), eye.get('y', 1.25), eye.get('z', 1.25)
+        bar_specs.sort(
+            key=lambda b: (b[0] - ex)**2 + (b[1] - ey)**2 + ez**2,
+            reverse=True,
+        )
+
+    traces = []
+    for xc, yc, amp, phase in bar_specs:
+        color = _phase_to_color(phase)
+        traces.append(_bar_mesh(
+            x_center = xc,
+            y_center = yc,
+            height   = amp,
+            color    = color,
+        ))
 
     # ── Axis tick annotations ─────────────────────────────────────────────────
     # Add invisible scatter traces at tick positions to get axis labels

@@ -385,6 +385,8 @@ app.layout = html.Div([
     # Current 3D figure state (for preserving camera)
     State('plot-3d', 'figure'),
     State('plot-3d', 'relayoutData'),
+    # Density matrix camera (for depth-sorting bars)
+    State('plot-density', 'relayoutData'),
     prevent_initial_call='initial_duplicate',
 )
 def update_all(
@@ -395,6 +397,7 @@ def update_all(
     visibility,
     current_3d,
     relayout_data,
+    density_relayout,
 ):
     # ── Visibility flags ──────────────────────────────────────────────────────
     show_ellipse = 'ellipse' in (visibility or [])
@@ -426,7 +429,12 @@ def update_all(
     if camera:
         fig_3d.update_layout(scene_camera=camera)
     fig_level    = make_level_figure(result)
-    fig_density  = make_density_figure(result)
+    dm_camera = None
+    if density_relayout and 'scene.camera' in density_relayout:
+        dm_camera = density_relayout['scene.camera']
+    fig_density  = make_density_figure(result, camera=dm_camera)
+    if dm_camera:
+        fig_density.update_layout(scene_camera=dm_camera)
     fig_ellipse  = make_ellipse_figure(result)
     fig_poincare = make_poincare_figure(result)
 
@@ -439,7 +447,50 @@ def update_all(
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 5. SLIDER ↔ NUMBER INPUT SYNC CALLBACKS
+# 5. DENSITY MATRIX BAR DEPTH-SORT ON ROTATION
+# ══════════════════════════════════════════════════════════════════════════════
+# Reorders the 9 Mesh3d bar traces by distance from the camera eye whenever the
+# user rotates the density plot. No physics is recomputed — bar centers are
+# extracted directly from the existing trace vertex data.
+
+@callback(
+    Output('plot-density', 'figure', allow_duplicate=True),
+    Input('plot-density', 'relayoutData'),
+    State('plot-density', 'figure'),
+    prevent_initial_call=True,
+)
+def resort_density_bars(relayout_data, current_figure):
+    if not relayout_data or 'scene.camera' not in relayout_data:
+        return no_update
+    if not current_figure:
+        return no_update
+
+    camera = relayout_data['scene.camera']
+    eye    = camera.get('eye', {})
+    ex = eye.get('x', 1.25)
+    ey = eye.get('y', 1.25)
+    ez = eye.get('z', 1.25)
+
+    data         = current_figure['data']
+    mesh_traces  = [t for t in data if t.get('type') == 'mesh3d']
+    other_traces = [t for t in data if t.get('type') != 'mesh3d']
+
+    def dist_sq(trace):
+        xs = trace['x']
+        ys = trace['y']
+        xc = (min(xs) + max(xs)) / 2
+        yc = (min(ys) + max(ys)) / 2
+        return (xc - ex)**2 + (yc - ey)**2 + ez**2
+
+    mesh_traces_sorted = sorted(mesh_traces, key=dist_sq, reverse=True)
+
+    current_figure['data'] = other_traces + mesh_traces_sorted
+    current_figure['layout']['scene']['camera'] = camera
+    return current_figure
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# 6. SLIDER ↔ NUMBER INPUT SYNC CALLBACKS
 # ══════════════════════════════════════════════════════════════════════════════
 # One pair per slider: slider → input (display sync) and input → slider (entry).
 # Clamping is applied in the input→slider direction so the slider and displayed
@@ -460,7 +511,7 @@ for _sid, _spec in SLIDERS.items():
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 6. RUN
+# 7. RUN
 # ══════════════════════════════════════════════════════════════════════════════
 
 if __name__ == '__main__':
